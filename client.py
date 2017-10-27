@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
-Programa cliente UDP que abre un socket a un servidor
+Cliente UDP con socket a un servidor
 """
-
+import sys
 import socket
 
+
 # Constantes. Dirección IP del servidor y contenido a enviar
-SERVER = 'localhost'
+SERVER = sys.argv[1]
 PORT = 6001
 LINE = '¡Hola mundo!'
 
