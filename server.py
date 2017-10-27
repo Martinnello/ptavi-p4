@@ -12,19 +12,29 @@ try:
 except IndexError:
     sys.exit("    Usage:   python3 server.py <Port>")
 
-
-class EchoHandler(socketserver.DatagramRequestHandler):
-    def handle(self):      # (all requests handled by this method)
+class SIPRegisterHandler(socketserver.DatagramRequestHandler):
+    
+    def handle(self):      # All requests handled by this method
         
         IP = self.client_address[0]
         PORT =  self.client_address[1]
+        Users = {'User':'', 'IP':''}
         print("CLIENT_IP: ", IP + "\t","CLIENT_PORT: ", PORT)
-        self.wfile.write(b"Peticion recibida")
+        self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+        
         for line in self.rfile:
-            print("El cliente envia: ", line.decode('utf-8'))
+            line = line.decode('utf-8')
+            line = line.split(' ')
+            Method = line[0]
+            if Method == 'REGISTER':
+                User = line[1].split(':')[1]
+                SIP = line[-1]
+                Users['IP'] = IP
+                Users['User'] = User
+                print(Users)
 
 if __name__ == "__main__":
-    serv = socketserver.UDPServer(('', PORT), EchoHandler) 
+    serv = socketserver.UDPServer(('', PORT), SIPRegisterHandler) 
 
     print("\n" + "Lanzando servidor UDP LOCAL - Puerto: " + str(PORT) + "\n")
     try:

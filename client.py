@@ -10,23 +10,25 @@ import socket
 try:
     SERVER = sys.argv[1]
     PORT = int(sys.argv[2])
-    MESSAGE = sys.argv[3] 
-   
-    if len(sys.argv) > 3:
-        MESSAGE = ''
-        CADENA = sys.argv [3:]
-        for item in CADENA:
-            MESSAGE += ' ' + ite  
+    METHOD = sys.argv[3]
+    USER = sys.argv[4]
 
 except IndexError:
-    sys.exit("    Usage:   python3 client.py <Server> <Port> <Message>")
+    sys.exit(" Usage: python3 client.py <Server> <Port> <Method> <Mail>")
 
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     my_socket.connect((SERVER, PORT))
-    print("Enviando:", MESSAGE)
-    my_socket.send(bytes(MESSAGE, 'utf-8') + b'\r\n')
-    data = my_socket.recv(1024)
-    print('Recibido -- ', data.decode('utf-8'))
 
-print("Socket terminado.")
+    if METHOD == "register":
+
+        METHOD = "REGISTER"
+        line = METHOD + " sip:" + str(USER) + " SIP/2.0\r\n\r\n"
+        print("Enviando:", line)
+        my_socket.send(bytes(line, 'utf-8'))
+        data = my_socket.recv(1024)
+        print(data.decode('utf-8'))
+    else:
+        sys.exit(" Usage: python3 client.py <Server> <Port> <register> <Mail>")
+
+print("Socket terminado. \r\n")
