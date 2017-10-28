@@ -15,23 +15,30 @@ except IndexError:
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
     
     def handle(self):      # All requests handled by this method
-        
+
         IP = self.client_address[0]
         PORT =  self.client_address[1]
-        Users = {'User':'', 'IP':''}
+        Users = {'USER':'', 'IP':'', 'EXPIRES':''}
         print("CLIENT_IP: ", IP + "\t","CLIENT_PORT: ", PORT)
-        self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
-        
-        for line in self.rfile:
-            line = line.decode('utf-8')
-            line = line.split(' ')
-            Method = line[0]
-            if Method == 'REGISTER':
-                User = line[1].split(':')[1]
-                SIP = line[-1]
-                Users['IP'] = IP
-                Users['User'] = User
-                print(Users)
+
+                            # Lee el registro del cliente
+        Lines = self.rfile.read()
+        Lines = Lines.decode('utf-8')
+        Info = Lines.split()
+        METHOD = Info[0]
+        USER = Info[1].split(':')[1]
+        EXPIRES = Info[-1]
+
+        if METHOD == 'REGISTER':
+            Users['USER'] = USER
+            Users['IP'] = IP
+            Users['EXPIRES'] = EXPIRES
+        if int(EXPIRES) == 0:
+            del Users['USER']
+            print(Users)
+            self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+        else:
+            print(Users)
 
 if __name__ == "__main__":
     serv = socketserver.UDPServer(('', PORT), SIPRegisterHandler) 
