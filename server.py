@@ -1,12 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-"""
-Servidor de eco en UDP simple
-"""
-import sys
-import socketserver
-import json
-import time
+
+import sys, socketserver, json, time
+
 
 
 try:
@@ -14,11 +10,8 @@ try:
 except IndexError:
     sys.exit("    Usage:   python3 server.py <Port>")
 
-Time = '%Y-%m-%d %H:%M:%S'
-
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
 
-    List = []
     Users = {}
 
     def json2registered(self):       # SEE IF IT EXIST    
@@ -45,36 +38,33 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         USER = Info[1].split(':')[1]
         METHOD = Info[0]
         EXPIRES = int(Info[-1])
+        Time = '%Y-%m-%d %H:%M:%S'
 
         if METHOD == 'REGISTER': 
             try:
                 if EXPIRES == 0:
                     del self.Users[USER]
-                    self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
                 else:
                     EXPIRES += time.time()
-                    Date = (time.strftime(Time, time.gmtime(EXPIRES)))
+                    Date = (time.strftime(Time, time.localtime(EXPIRES)))
                     self.Users[USER] = [str(IP), str(Date)]
-                    self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
-
+                self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
             except KeyError:
-                print("No User registered")
-        
-        Del_List = []
-        Now = (time.strftime(Time, time.gmtime(time.time())))
-        Now = time.mktime(time.strptime(Now, Time))
+                print("User unregistered")
 
-        for user in self.Users:
-            exp = time.mktime(time.strptime(self.Users[user][1], Time))
-            if exp <= Now:
-                Del_List.append(user)
+            Del_List = []
+            Now = time.localtime(time.time())
 
-        for user in Del_List:
-            del self.Users[user]
+            for user in self.Users:
+                Date = time.strptime(self.Users[user][1], Time)
+                if Date <= Now:
+                    Del_List.append(user)
 
-        print(self.Users)
-        self.register2_json()
-            
+            for user in Del_List:
+                del self.Users[user]
+                
+            print(self.Users)    
+            self.register2_json()
 
 if __name__ == "__main__":
     serv = socketserver.UDPServer(('', PORT), SIPRegisterHandler) 
