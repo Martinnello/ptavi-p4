@@ -6,7 +6,7 @@ Servidor de eco en UDP simple
 import sys
 import socketserver
 import json
-from datetime import datetime, date, time, timedelta
+import time
 
 
 try:
@@ -25,7 +25,6 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         try:
             with open('registered.json', 'r') as jsonfile:
                 self.Users = json.load(jsonfile)
-                print(self.Users)
         except:
             pass
 
@@ -53,19 +52,26 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                     del self.Users[USER]
                     self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
                 else:
-                    EXPIRES = datetime.now() + timedelta(seconds = EXPIRES)
-                    Date = EXPIRES.strftime(Time)
-                    self.Users[USER] = [str(IP), Date]
+                    EXPIRES += time.time()
+                    Date = (time.strftime(Time, time.gmtime(EXPIRES)))
+                    self.Users[USER] = [str(IP), str(Date)]
                     self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
             except KeyError:
                 print("No User registered")
         
+        Del_List = []
+        Now = (time.strftime(Time, time.gmtime(time.time())))
+        Now = time.mktime(time.strptime(Now, Time))
+
         for user in self.Users:
-            Now = datetime.now().strftime(Time)
-            Date = self.Users[user][1]
-            if Date >= Now:
-                del self.Users[USER]
+            exp = time.mktime(time.strptime(self.Users[user][1], Time))
+            if exp <= Now:
+                Del_List.append(user)
+
+        for user in Del_List:
+            del self.Users[user]
+
         print(self.Users)
         self.register2_json()
             
