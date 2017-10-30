@@ -6,7 +6,7 @@ Servidor de eco en UDP simple
 import sys
 import socketserver
 import json
-import time
+from datetime import datetime, date, time, timedelta
 
 
 try:
@@ -14,40 +14,66 @@ try:
 except IndexError:
     sys.exit("    Usage:   python3 server.py <Port>")
 
-Users = {}
+Time = '%Y-%m-%d %H:%M:%S'
 
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
 
+    List = []
+    Users = {}
+
+    def json2registered(self):       # SEE IF IT EXIST    
+        try:
+            with open('registered.json', 'r') as jsonfile:
+                self.Users = json.load(jsonfile)
+                print(self.Users)
+        except:
+            pass
+
     def register2_json(self):       # MAKE JSON FILE
-    
+
         with open("registered.json", "w") as jsonfile:
-            json.dump(Users, jsonfile, indent=3)
+            json.dump(self.Users, jsonfile, indent=3)
     
     def handle(self):      # All requests handled by this method
+
+        self.json2registered()
         IP = self.client_address[0]
         PORT =  self.client_address[1]
         print("CLIENT_IP: ", IP + "\t","CLIENT_PORT: ", PORT)
 
         Lines = self.rfile.read()
         Info = Lines.decode('utf-8').split()
-        METHOD = Info[0]
         USER = Info[1].split(':')[1]
-        EXPIRES = Info[-1]
-        time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time()))
+        METHOD = Info[0]
+        EXPIRES = int(Info[-1])
 
-        if METHOD == 'REGISTER':
-            Users[USER] = ["IP: " + str(IP), "EXPIRES: " + str(EXPIRES)]
-            self.register2_json()
-        if int(EXPIRES) == 0:
-            del Users[USER]
-            self.register2_json()
-            self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
-        print(Users)
+        if METHOD == 'REGISTER': 
+            try:
+                if EXPIRES == 0:
+                    del self.Users[USER]
+                    self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+                else:
+                    EXPIRES = datetime.now() + timedelta(seconds = EXPIRES)
+                    Date = EXPIRES.strftime(Time)
+                    self.Users[USER] = [str(IP), Date]
+                    self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+
+            except KeyError:
+                print("No User registered")
+        
+        for user in self.Users:
+            Now = datetime.now().strftime(Time)
+            Date = self.Users[user][1]
+            if Date >= Now:
+                del self.Users[USER]
+        print(self.Users)
+        self.register2_json()
+            
 
 if __name__ == "__main__":
     serv = socketserver.UDPServer(('', PORT), SIPRegisterHandler) 
-
     print("\n" + "Lanzando servidor UDP LOCAL - Puerto: " + str(PORT) + "\n")
+
     try:
         serv.serve_forever()
     except KeyboardInterrupt:
