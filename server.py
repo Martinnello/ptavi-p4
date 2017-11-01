@@ -58,6 +58,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                 self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
             except KeyError:
                 print("User unregistered")
+                self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
             Del_List = []
             Now = time.localtime(time.time())
