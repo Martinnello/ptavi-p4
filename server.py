@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+"""Servidor UDP con handle de registro."""
+
 import sys
 import socketserver
 import json
@@ -14,23 +16,25 @@ except IndexError:
 
 
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
+    """SIP Register and save users in .json file."""
 
     Users = {}
 
-    def json2registered(self):       # SEE IF IT EXIST
+    def json2registered(self):
+        """See if registered.json exist."""
         try:
             with open('registered.json', 'r') as jsonfile:
                 self.Users = json.load(jsonfile)
-        except:
+        except FileNotFoundError:
             pass
 
-    def register2_json(self):       # MAKE JSON FILE
-
+    def register2_json(self):
+        """Make registered.json file."""
         with open("registered.json", "w") as jsonfile:
             json.dump(self.Users, jsonfile, indent=3)
 
-    def handle(self):      # All requests handled by this method
-
+    def handle(self):
+        """All requests handled by this method."""
         self.json2registered()
         IP = self.client_address[0]
         PORT = self.client_address[1]
@@ -68,6 +72,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
 
             print(self.Users)
             self.register2_json()
+
 
 if __name__ == "__main__":
     serv = socketserver.UDPServer(('', PORT), SIPRegisterHandler)
