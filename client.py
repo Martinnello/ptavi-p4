@@ -30,7 +30,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     if METHOD == "REGISTER":
         my_socket.send(bytes(Info, 'utf-8'))
         data = my_socket.recv(1024)
-        print("Recibido -- ",data.decode('utf-8'))
+        print("Recibido -- ", data.decode('utf-8'))
     else:
         sys.exit(" Usage: python3 client.py IP Port register Mail exp_value")
 
